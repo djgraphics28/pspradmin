@@ -2,16 +2,18 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\InstructorResource\Pages;
-use App\Filament\Resources\InstructorResource\RelationManagers;
-use App\Models\Instructor;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
+use App\Models\Instructor;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\InstructorResource\Pages;
+use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use App\Filament\Resources\InstructorResource\RelationManagers;
 
 class InstructorResource extends Resource
 {
@@ -23,6 +25,9 @@ class InstructorResource extends Resource
     {
         return $form
             ->schema([
+                SpatieMediaLibraryFileUpload::make('avatar')
+                    ->columnSpanFull()
+                    ->collection('avatars'),
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -48,6 +53,8 @@ class InstructorResource extends Resource
     {
         return $table
             ->columns([
+                SpatieMediaLibraryImageColumn::make('avatar')
+                    ->collection('avatars'),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('title')
