@@ -23,6 +23,8 @@ class Instructor extends Authenticatable implements HasMedia
      */
     protected $fillable = [
         'name',
+        'title',
+        'position',
         'email',
         'password',
     ];
