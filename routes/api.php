@@ -18,12 +18,15 @@ Route::group(['prefix' => 'student'], function () {
     //private
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/profile', [StudentController::class, 'profile']);
+        Route::put('/profile', [StudentController::class, 'updateProfile']);
+        Route::put('/change-password', [StudentController::class, 'changePassword']);
         Route::post('/logout', [StudentController::class, 'logout']);
 
         Route::get('/categories', [StudentController::class, 'categories']);
 
         Route::get('/{categoryId}/lessons', [StudentController::class, 'lessonsByCategory']);
         Route::get('/lesson/{lessonId}', [StudentController::class, 'lessonInfo']);
+        Route::get('lesson/{lessonId}/quizzes', [StudentController::class, 'getQuizzesByLessonId']);
     });
 });
 
@@ -35,6 +38,24 @@ Route::group(['prefix' => 'instructor'], function () {
     //private
     Route::group(['middleware' => 'auth:sanctum'], function () {
         Route::get('/profile', [InstructorController::class, 'profile']);
+        Route::put('/profile', [InstructorController::class, 'updateProfile']);
+        Route::put('/change-password', [InstructorController::class, 'changePassword']);
         Route::post('/logout', [InstructorController::class, 'logout']);
+
+        Route::get('/categories', [InstructorController::class, 'categories']);
+
+        Route::get('/lessons',[InstructorController::class, 'getLessons']);
+        Route::post('/lessons', [InstructorController::class, 'storeLesson']);
+        Route::put('/lessons/{lessonId}', [InstructorController::class, 'updateLesson']);
+        Route::delete('/lessons/{lessonId}', [InstructorController::class, 'deleteLesson']);
+
+        Route::post('/{lessonId}/quizzes', [InstructorController::class, 'storeQuizByLessonId']);
+        Route::put('/quizzes/{quizId}', [InstructorController::class, 'updateQuiz']);
+        Route::get('/{lessonId}/quizzes', [InstructorController::class, 'getQuizzesByLessonId']);
+        Route::delete('/quizzes/{quizId}', [InstructorController::class, 'deleteQuiz']);
+
+        Route::get('/{quizId}/user-answers/student-lists', [InstructorController::class, 'getStudentListFromUserAnswerModel']);
+        Route::get('/{quizId}/user-answers/{studentId}/info', [InstructorController::class, 'getUserAnswerInfoByStudentId']);
+
     });
 });

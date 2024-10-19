@@ -66,7 +66,7 @@ class StudentController extends Controller
 
         $token = $student->createToken('StudentToken')->plainTextToken;
 
-        return response()->json(['token' => $token], 200);
+        return response()->json(['token' => $token, 'user' => $student], 200);
     }
 
 
@@ -83,6 +83,50 @@ class StudentController extends Controller
     public function profile(Request $request)
     {
         return response()->json($request->user(), 200);
+    }
+
+    //updateProfile
+    public function updateProfile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'string',
+            'middle_name' => 'nullable|string',
+            'last_name' => 'string',
+            'contact_number' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $student = $request->user();
+        $student->update($request->all());
+
+        return response()->json(['message' => 'Profile updated successfully'], 200);
+    }
+
+    //changePassword
+    public function changePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $student = $request->user();
+
+        if (!password_verify($request->current_password, $student->password)) {
+            return response()->json(['message' => 'Invalid current password'], 401);
+        }
+
+        $student->password = bcrypt($request->new_password);
+        $student->save();
+
+        return response()->json(['message' => 'Password changed successfully'], 200);
     }
 
     //CATEGORIES
@@ -104,6 +148,13 @@ class StudentController extends Controller
     {
         $lesson = Lesson::find($id);
         return response()->json($lesson, 200);
+    }
+
+    //getQuizByLessonId
+    public function getQuizzesByLessonId($id)
+    {
+        $lesson = Lesson::find($id);
+        return response()->json($lesson->quizzes, 200);
     }
 
 }
