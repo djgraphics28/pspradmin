@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\API;
 
 use App\Models\Quiz;
@@ -9,9 +8,12 @@ use App\Models\Instructor;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use App\Concerns\Traits\HttpResponses;
 
 class InstructorController extends Controller
 {
+    use HttpResponses; // Use your HttpResponses trait
+
     //login
     public function login(Request $request)
     {
@@ -21,27 +23,26 @@ class InstructorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 400);
         }
 
-        // Attempt to find the instructor by either email or student_number
+        // Attempt to find the instructor by email
         $instructor = Instructor::where('email', $request->email)->first();
 
         if (!$instructor || !password_verify($request->password, $instructor->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return $this->error(['message' => 'Invalid credentials'], 401);
         }
 
         $token = $instructor->createToken('InstructorToken')->plainTextToken;
 
-        return response()->json(['token' => $token, 'user' => $instructor ], 200);
+        return $this->success(['token' => $token, 'user' => $instructor], 200);
     }
 
     //getProfile
     public function getProfile(Request $request)
     {
         $instructor = $request->user();
-
-        return response()->json(['instructor' => $instructor], 200);
+        return $this->success(['instructor' => $instructor], 200);
     }
 
     //updateProfile
@@ -54,7 +55,7 @@ class InstructorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 400);
         }
 
         $instructor = $request->user();
@@ -73,7 +74,7 @@ class InstructorController extends Controller
 
         $instructor->save();
 
-        return response()->json(['message' => 'Profile updated successfully', 'instructor' => $instructor], 200);
+        return $this->success(['message' => 'Profile updated successfully', 'instructor' => $instructor], 200);
     }
 
     //changePassword
@@ -85,19 +86,19 @@ class InstructorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 400);
         }
 
         $instructor = $request->user();
 
         if (!password_verify($request->current_password, $instructor->password)) {
-            return response()->json(['message' => 'Invalid current password'], 401);
+            return $this->error(['message' => 'Invalid current password'], 401);
         }
 
         $instructor->password = bcrypt($request->new_password);
         $instructor->save();
 
-        return response()->json(['message' => 'Password changed successfully'], 200);
+        return $this->success(['message' => 'Password changed successfully'], 200);
     }
 
     //logout
@@ -106,15 +107,14 @@ class InstructorController extends Controller
         // Revoke the token that was used to authenticate the request
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'You have been successfully logged out.'], 200);
+        return $this->success(['message' => 'You have been successfully logged out.'], 200);
     }
 
     //getCategories
     public function categories(Request $request)
     {
         $categories = Category::all();
-
-        return response()->json(['categories' => $categories], 200);
+        return $this->success(['categories' => $categories], 200);
     }
 
     //storeLesson
@@ -128,7 +128,7 @@ class InstructorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 400);
         }
 
         $lesson = Lesson::create([
@@ -138,17 +138,15 @@ class InstructorController extends Controller
             'content' => $request->body,
             'instructor_id' => $request->user()->id,
         ]);
-        //please breakdown request all
 
-        return response()->json(['message' => 'Lesson created successfully', 'lesson' => $lesson], 201);
+        return $this->success(['message' => 'Lesson created successfully', 'lesson' => $lesson], 201);
     }
 
     //getLessons
     public function getLessons(Request $request)
     {
         $lessons = Lesson::where('instructor_id', $request->user()->id)->get();
-
-        return response()->json(['lessons' => $lessons], 200);
+        return $this->success(['lessons' => $lessons], 200);
     }
 
     //getLesson
@@ -157,10 +155,10 @@ class InstructorController extends Controller
         $lesson = Lesson::where('id', $id)->where('instructor_id', $request->user()->id)->first();
 
         if (!$lesson) {
-            return response()->json(['message' => 'Lesson not found'], 404);
+            return $this->error(['message' => 'Lesson not found'], 404);
         }
 
-        return response()->json(['lesson' => $lesson], 200);
+        return $this->success(['lesson' => $lesson], 200);
     }
 
     //updateLesson
@@ -169,7 +167,7 @@ class InstructorController extends Controller
         $lesson = Lesson::where('id', $id)->where('instructor_id', $request->user()->id)->first();
 
         if (!$lesson) {
-            return response()->json(['message' => 'Lesson not found'], 404);
+            return $this->error(['message' => 'Lesson not found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -180,7 +178,7 @@ class InstructorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 400);
         }
 
         $lesson->update([
@@ -190,7 +188,7 @@ class InstructorController extends Controller
             'content' => $request->body,
         ]);
 
-        return response()->json(['message' => 'Lesson updated successfully', 'lesson' => $lesson], 200);
+        return $this->success(['message' => 'Lesson updated successfully', 'lesson' => $lesson], 200);
     }
 
     //deleteLesson
@@ -199,12 +197,12 @@ class InstructorController extends Controller
         $lesson = Lesson::where('id', $id)->where('instructor_id', $request->user()->id)->first();
 
         if (!$lesson) {
-            return response()->json(['message' => 'Lesson not found'], 404);
+            return $this->error(['message' => 'Lesson not found'], 404);
         }
 
         $lesson->delete();
 
-        return response()->json(['message' => 'Lesson deleted successfully'], 200);
+        return $this->success(['message' => 'Lesson deleted successfully'], 200);
     }
 
     //storeQuizByLessonId
@@ -215,7 +213,7 @@ class InstructorController extends Controller
             ->first();
 
         if (!$lesson) {
-            return response()->json(['message' => 'Lesson not found'], 404);
+            return $this->error(['message' => 'Lesson not found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -227,13 +225,12 @@ class InstructorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 400);
         }
 
         // Create the quiz
         $quiz = Quiz::create([
             'lesson_id' => $lesson->id,
-            // You can add other quiz-related fields if necessary
         ]);
 
         foreach ($request->questions as $questionData) {
@@ -251,7 +248,7 @@ class InstructorController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Quiz created successfully', 'quiz' => $quiz], 201);
+        return $this->success(['message' => 'Quiz created successfully', 'quiz' => $quiz], 201);
     }
 
     //getQuizzesByLessonId
@@ -262,12 +259,12 @@ class InstructorController extends Controller
             ->first();
 
         if (!$lesson) {
-            return response()->json(['message' => 'Lesson not found'], 404);
+            return $this->error(['message' => 'Lesson not found'], 404);
         }
 
         $quizzes = Quiz::where('lesson_id', $lesson->id)->get();
 
-        return response()->json(['quizzes' => $quizzes], 200);
+        return $this->success(['quizzes' => $quizzes], 200);
     }
 
     //updateQuizByLessonId
@@ -278,17 +275,12 @@ class InstructorController extends Controller
             ->first();
 
         if (!$lesson) {
-            return response()->json(['message' => 'Lesson not found'], 404);
-        }
-
-        $quiz = Quiz::where('lesson_id', $lesson->id)->first();
-
-        if (!$quiz) {
-            return response()->json(['message' => 'Quiz not found'], 404);
+            return $this->error(['message' => 'Lesson not found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
             'questions' => 'required|array',
+            'questions.*.id' => 'required|integer|exists:questions,id',
             'questions.*.question' => 'required|string',
             'questions.*.options' => 'required|array',
             'questions.*.options.*' => 'required|string',
@@ -296,119 +288,51 @@ class InstructorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 400);
         }
 
         // Update the quiz
-        $quiz->update([
-            // You can add other quiz-related fields if necessary
-        ]);
-
-        // Delete existing questions and answers
-        $quiz->questions()->delete();
+        $quiz = Quiz::where('lesson_id', $lesson->id)->first();
 
         foreach ($request->questions as $questionData) {
-            // Create the question associated with the quiz
-            $question = $quiz->questions()->create([
-                'question' => $questionData['question'],
-            ]);
+            $question = $quiz->questions()->find($questionData['id']);
 
-            // Create answers for the question
-            foreach ($questionData['options'] as $option) {
-                $question->answers()->create([
-                    'answer_text' => $option,
-                    'is_correct' => $option === $questionData['correct_answer'],
-                ]);
+            if ($question) {
+                $question->update(['question' => $questionData['question']]);
+
+                // Update answers
+                $question->answers()->delete();
+                foreach ($questionData['options'] as $option) {
+                    $question->answers()->create([
+                        'answer_text' => $option,
+                        'is_correct' => $option === $questionData['correct_answer'],
+                    ]);
+                }
             }
         }
 
-        return response()->json(['message' => 'Quiz updated successfully', 'quiz' => $quiz], 200);
+        return $this->success(['message' => 'Quiz updated successfully'], 200);
     }
 
-    //updatQuiz
-    public function updateQuiz(Request $request, $id)
+    //deleteQuizByLessonId
+    public function deleteQuizByLessonId(Request $request, $id)
     {
-        $quiz = Quiz::where('id', $id)
+        $lesson = Lesson::where('id', $id)
             ->where('instructor_id', $request->user()->id)
             ->first();
 
-        if (!$quiz) {
-            return response()->json(['message' => 'Quiz not found'], 404);
+        if (!$lesson) {
+            return $this->error(['message' => 'Lesson not found'], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'title' => 'string',
-            'description' => 'string',
-            'category' => 'string',
-            'body' => 'string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
-
-        $quiz->update([
-            'title' => $request->title,
-            'description' => $request->description,
-            'category' => $request->category,
-            'content' => $request->body,
-        ]);
-
-        return response()->json(['message' => 'Quiz updated successfully', 'quiz' => $quiz], 200);
-    }
-
-    //deleteQuiz
-    public function deleteQuiz(Request $request, $id)
-    {
-        $quiz = Quiz::where('id', $id)
-            ->where('instructor_id', $request->user()->id)
-            ->first();
+        $quiz = Quiz::where('lesson_id', $lesson->id)->first();
 
         if (!$quiz) {
-            return response()->json(['message' => 'Quiz not found'], 404);
+            return $this->error(['message' => 'Quiz not found'], 404);
         }
 
         $quiz->delete();
 
-        return response()->json(['message' => 'Quiz deleted successfully'], 200);
+        return $this->success(['message' => 'Quiz deleted successfully'], 200);
     }
-
-    //getStudentListFromUserAnswerModel
-    public function getStudentListFromUserAnswerModel(Request $request, $id)
-    {
-        $quiz = Quiz::where('id', $id)
-            ->where('instructor_id', $request->user()->id)
-            ->first();
-
-        if (!$quiz) {
-            return response()->json(['message' => 'Quiz not found'], 404);
-        }
-
-        $studentList = $quiz->userAnswers()->with('student')->get();
-
-        return response()->json(['student_list' => $studentList], 200);
-    }
-
-    //getUserAnswerInfoByStudentId
-    public function getUserAnswerInfoByStudentId(Request $request, $id, $studentId)
-    {
-        $quiz = Quiz::where('id', $id)
-            ->where('instructor_id', $request->user()->id)
-            ->first();
-
-        if (!$quiz) {
-            return response()->json(['message' => 'Quiz not found'], 404);
-        }
-
-        $userAnswer = $quiz->userAnswers()->where('student_id', $studentId)->first();
-
-        if (!$userAnswer) {
-            return response()->json(['message' => 'User answer not found'], 404);
-        }
-
-        return response()->json(['user_answer' => $userAnswer], 200);
-    }
-
-
-
 }

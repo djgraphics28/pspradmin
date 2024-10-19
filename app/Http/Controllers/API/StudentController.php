@@ -8,10 +8,14 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Concerns\Traits\HttpResponses;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\API\StudentProfileResource;
 
 class StudentController extends Controller
 {
+    use HttpResponses; // Use the HttpResponses trait
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -26,7 +30,7 @@ class StudentController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 'Validation errors occurred', 400);
         }
 
         $student = Student::create([
@@ -40,10 +44,10 @@ class StudentController extends Controller
             'is_active' => $request->is_active ?? true,
         ]);
 
-        return response()->json(['message' => 'You are now registered successfully'], 201);
+        return $this->success([], 'You are now registered successfully', 201);
     }
 
-    //login
+    // Login
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -52,7 +56,7 @@ class StudentController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 'Validation errors occurred', 400);
         }
 
         // Attempt to find the student by either email or student_number
@@ -61,31 +65,30 @@ class StudentController extends Controller
                         ->first();
 
         if (!$student || !password_verify($request->password, $student->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+            return $this->unauthorized('Invalid credentials');
         }
 
         $token = $student->createToken('StudentToken')->plainTextToken;
 
-        return response()->json(['token' => $token, 'user' => $student], 200);
+        return $this->success(['token' => $token, 'user' => New StudentProfileResource($student)], 'Login successful', 200);
     }
 
-
-    //logout
+    // Logout
     public function logout(Request $request)
     {
         // Revoke the token that was used to authenticate the request
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json(['message' => 'You have been successfully logged out.'], 200);
+        return $this->success([], 'You have been successfully logged out.', 200);
     }
 
-    //profile
+    // Profile
     public function profile(Request $request)
     {
-        return response()->json($request->user(), 200);
+        return $this->success($request->user(), 'Profile retrieved successfully', 200);
     }
 
-    //updateProfile
+    // Update Profile
     public function updateProfile(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -96,16 +99,16 @@ class StudentController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 'Validation errors occurred', 400);
         }
 
         $student = $request->user();
         $student->update($request->all());
 
-        return response()->json(['message' => 'Profile updated successfully'], 200);
+        return $this->success([], 'Profile updated successfully', 200);
     }
 
-    //changePassword
+    // Change Password
     public function changePassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -114,47 +117,52 @@ class StudentController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+            return $this->error($validator->errors(), 'Validation errors occurred', 400);
         }
 
         $student = $request->user();
 
         if (!password_verify($request->current_password, $student->password)) {
-            return response()->json(['message' => 'Invalid current password'], 401);
+            return $this->unauthorized('Invalid current password');
         }
 
         $student->password = bcrypt($request->new_password);
         $student->save();
 
-        return response()->json(['message' => 'Password changed successfully'], 200);
+        return $this->success([], 'Password changed successfully', 200);
     }
 
-    //CATEGORIES
+    // Categories
     public function categories()
     {
         $categories = Category::all();
-        return response()->json($categories, 200);
+        return $this->success($categories, 'Categories retrieved successfully', 200);
     }
 
-    //GET LESSON BY CATEGORY
+    // Get Lessons by Category
     public function lessonsByCategory($category_id)
     {
         $lessons = Lesson::where('category_id', $category_id)->get();
-        return response()->json($lessons, 200);
+        return $this->success($lessons, 'Lessons retrieved successfully', 200);
     }
 
-    //GET LESSON BY ID
+    // Get Lesson by ID
     public function lessonInfo($id)
     {
         $lesson = Lesson::find($id);
-        return response()->json($lesson, 200);
+        if (!$lesson) {
+            return $this->notFound('Lesson not found');
+        }
+        return $this->success($lesson, 'Lesson retrieved successfully', 200);
     }
 
-    //getQuizByLessonId
+    // Get Quizzes by Lesson ID
     public function getQuizzesByLessonId($id)
     {
         $lesson = Lesson::find($id);
-        return response()->json($lesson->quizzes, 200);
+        if (!$lesson) {
+            return $this->notFound('Lesson not found');
+        }
+        return $this->success($lesson->quizzes, 'Quizzes retrieved successfully', 200);
     }
-
 }
