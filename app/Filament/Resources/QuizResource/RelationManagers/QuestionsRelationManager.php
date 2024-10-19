@@ -24,10 +24,13 @@ class QuestionsRelationManager extends RelationManager
 
                 // Define the Answers sub-form
                 Forms\Components\Repeater::make('answers') // Use a Repeater for dynamic answer input
+                    ->label('Choices') // Label for the repeater
+
                     ->columnSpanFull()
                     ->relationship('answers') // This assumes you have a relationship defined in your Question model
                     ->schema([
                         Forms\Components\TextInput::make('answer_text')
+                            ->label('Choice')
                             ->required()
                             ->maxLength(255),
 
