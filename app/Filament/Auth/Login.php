@@ -64,4 +64,9 @@ class Login extends BaseAuth
             ]);
         }
     }
+
+    public function getUserName(): string
+    {
+        return auth()->user()?->name ?? 'Default Username';
+    }
 }

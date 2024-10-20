@@ -27,6 +27,10 @@ Route::group(['prefix' => 'student'], function () {
         Route::get('/{categoryId}/lessons', [StudentController::class, 'lessonsByCategory']);
         Route::get('/lesson/{lessonId}', [StudentController::class, 'lessonInfo']);
         Route::get('lesson/{lessonId}/quizzes', [StudentController::class, 'getQuizzesByLessonId']);
+        //take quiz
+        Route::post('/quizzes/{quizId}/take', [StudentController::class, 'takeQuiz']);
+
+
     });
 });
 

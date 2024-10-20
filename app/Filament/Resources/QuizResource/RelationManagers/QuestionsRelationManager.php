@@ -27,7 +27,7 @@ class QuestionsRelationManager extends RelationManager
                     ->label('Choices') // Label for the repeater
 
                     ->columnSpanFull()
-                    ->relationship('answers') // This assumes you have a relationship defined in your Question model
+                    ->relationship('choices') // This assumes you have a relationship defined in your Question model
                     ->schema([
                         Forms\Components\TextInput::make('answer_text')
                             ->label('Choice')
@@ -51,9 +51,9 @@ class QuestionsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('question_text'),
 
                // Add a custom column for displaying the number of answers
-               Tables\Columns\TextColumn::make('answers') // This will display related answers
+               Tables\Columns\TextColumn::make('choices') // This will display related answers
                ->label('Choices')
-               ->formatStateUsing(fn ($record) => $record->answers()->count() . ' choices'), // Count the number of answers
+               ->formatStateUsing(fn ($record) => $record->choices()->count() . ' choices'), // Count the number of answers
             ])
             ->filters([
                 //
