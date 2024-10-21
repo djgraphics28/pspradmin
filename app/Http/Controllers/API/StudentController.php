@@ -168,13 +168,22 @@ class StudentController extends Controller
         }
 
         // Load quizzes with their questions and choices
-        $quizzes = Quiz::with(['questions.choices']) // Correct usage of eager loading
+        $quizzes = Quiz::with(['questions.choices'])
             ->where('lesson_id', $id)
             ->get();
+
+        // Shuffle choices for each question in the quizzes
+        foreach ($quizzes as $quiz) {
+            foreach ($quiz->questions as $question) {
+                // Shuffle the choices
+                $question->choices = $question->choices->shuffle();
+            }
+        }
 
         // Return the quizzes related to the lesson
         return $this->success($quizzes, 'Quizzes retrieved successfully', 200);
     }
+
 
     public function takeQuiz(Request $request, $quizId): JsonResponse
     {
@@ -219,5 +228,4 @@ class StudentController extends Controller
             'remarks' => $studentQuiz->remarks, // Return the remarks from the created record
         ], 200);
     }
-
 }
