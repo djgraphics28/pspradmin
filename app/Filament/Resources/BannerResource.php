@@ -4,20 +4,20 @@ namespace App\Filament\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
-use App\Models\Lesson;
+use App\Models\Banner;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\LessonResource\Pages;
+use App\Filament\Resources\BannerResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
-use App\Filament\Resources\LessonResource\RelationManagers;
+use App\Filament\Resources\BannerResource\RelationManagers;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 
-class LessonResource extends Resource
+class BannerResource extends Resource
 {
-    protected static ?string $model = Lesson::class;
+    protected static ?string $model = Banner::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -31,18 +31,6 @@ class LessonResource extends Resource
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
-                    ->required()
-                    ->columnSpanFull(),
-                Forms\Components\Select::make('category_id')
-                    ->relationship('category', 'name')
-                    ->required(),
-                Forms\Components\Select::make('instructor_id')
-                    ->relationship('instructor', 'name')
-                    ->required(),
-                Forms\Components\RichEditor::make('content')
-                    ->columnSpanFull()
-                    ->required(),
             ]);
     }
 
@@ -51,15 +39,9 @@ class LessonResource extends Resource
         return $table
             ->columns([
                 SpatieMediaLibraryImageColumn::make('picture')
-                ->collection('pictures'),
+                    ->collection('pictures'),
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('category.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('instructor.name')
-                    ->numeric()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -92,9 +74,9 @@ class LessonResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListLessons::route('/'),
-            'create' => Pages\CreateLesson::route('/create'),
-            'edit' => Pages\EditLesson::route('/{record}/edit'),
+            'index' => Pages\ListBanners::route('/'),
+            'create' => Pages\CreateBanner::route('/create'),
+            'edit' => Pages\EditBanner::route('/{record}/edit'),
         ];
     }
 }

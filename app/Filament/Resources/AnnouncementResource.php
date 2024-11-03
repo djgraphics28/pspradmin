@@ -2,22 +2,20 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\AnnouncementResource\Pages;
+use App\Filament\Resources\AnnouncementResource\RelationManagers;
+use App\Models\Announcement;
 use Filament\Forms;
-use Filament\Tables;
-use App\Models\Lesson;
 use Filament\Forms\Form;
-use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\LessonResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
-use App\Filament\Resources\LessonResource\RelationManagers;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 
-class LessonResource extends Resource
+class AnnouncementResource extends Resource
 {
-    protected static ?string $model = Lesson::class;
+    protected static ?string $model = Announcement::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -25,24 +23,13 @@ class LessonResource extends Resource
     {
         return $form
             ->schema([
-                SpatieMediaLibraryFileUpload::make('picture')
-                    ->columnSpanFull()
-                    ->collection('pictures'),
                 Forms\Components\TextInput::make('title')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
+                Forms\Components\RichEditor::make('content')
                     ->required()
                     ->columnSpanFull(),
-                Forms\Components\Select::make('category_id')
-                    ->relationship('category', 'name')
-                    ->required(),
-                Forms\Components\Select::make('instructor_id')
-                    ->relationship('instructor', 'name')
-                    ->required(),
-                Forms\Components\RichEditor::make('content')
-                    ->columnSpanFull()
-                    ->required(),
+                Forms\Components\DateTimePicker::make('published_at'),
             ]);
     }
 
@@ -50,15 +37,10 @@ class LessonResource extends Resource
     {
         return $table
             ->columns([
-                SpatieMediaLibraryImageColumn::make('picture')
-                ->collection('pictures'),
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('category.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('instructor.name')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('published_at')
+                    ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -92,9 +74,9 @@ class LessonResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListLessons::route('/'),
-            'create' => Pages\CreateLesson::route('/create'),
-            'edit' => Pages\EditLesson::route('/{record}/edit'),
+            'index' => Pages\ListAnnouncements::route('/'),
+            'create' => Pages\CreateAnnouncement::route('/create'),
+            'edit' => Pages\EditAnnouncement::route('/{record}/edit'),
         ];
     }
 }

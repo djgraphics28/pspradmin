@@ -30,7 +30,11 @@ Route::group(['prefix' => 'student'], function () {
         //take quiz
         Route::post('/quizzes/{quizId}/take', [StudentController::class, 'takeQuiz']);
 
+        Route::get('/home-banner', [StudentController::class, 'homeBanner']);
+        Route::get('/services', [StudentController::class, 'services']);
+        Route::get('/announcements', [StudentController::class, 'announcements']);
 
+        Route::get('/quiz-results', [StudentController::class, 'quizResult']);
     });
 });
 

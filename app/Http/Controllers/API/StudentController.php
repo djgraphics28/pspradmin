@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Quiz;
+use App\Models\Banner;
 use App\Models\Lesson;
+use App\Models\Service;
 use App\Models\Student;
 use App\Models\Category;
 use App\Models\StudentQuiz;
@@ -12,9 +14,13 @@ use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Concerns\Traits\HttpResponses;
+use App\Http\Resources\API\AnnouncementResource;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Resources\API\LessonResource;
+use App\Http\Resources\API\ServiceResource;
+use App\Http\Resources\API\CategoryResource;
 use App\Http\Resources\API\StudentProfileResource;
+use App\Models\Announcement;
 
 class StudentController extends Controller
 {
@@ -139,7 +145,7 @@ class StudentController extends Controller
     public function categories()
     {
         $categories = Category::all();
-        return $this->success($categories, 'Categories retrieved successfully', 200);
+        return $this->success(CategoryResource::collection($categories), 'Categories retrieved successfully', 200);
     }
 
     // Get Lessons by Category
@@ -156,7 +162,7 @@ class StudentController extends Controller
         if (!$lesson) {
             return $this->notFound('Lesson not found');
         }
-        return $this->success($lesson, 'Lesson retrieved successfully', 200);
+        return $this->success(New LessonResource($lesson), 'Lesson retrieved successfully', 200);
     }
 
     // Get Quizzes by Lesson ID
@@ -230,10 +236,36 @@ class StudentController extends Controller
     }
 
     //getResults
-    public function getResults(Request $request)
+    public function quizResult(Request $request)
     {
         $student = $request->user();
         $studentQuizzes = StudentQuiz::where('student_id', $student->id)->get();
         return $this->success($studentQuizzes, 'Results retrieved successfully', 200);
+    }
+
+    public function homeBanner()
+    {
+        $banner = Banner::find(1);
+
+        if (!$banner) {
+            return $this->notFound('Banner not found');
+        }
+
+        // Get the picture media URL if banner exists
+        $banner = $banner->getFirstMediaUrl('pictures');
+
+        return $this->success($banner, 'Banner retrieved successfully', 200);
+    }
+
+    public function services()
+    {
+        $services = Service::all();
+        return $this->success(ServiceResource::collection($services), 'Services retrieved successfully', 200);
+    }
+
+    public function announcements()
+    {
+        $announcements = Announcement::all();
+        return $this->success(AnnouncementResource::collection($announcements), 'Announcements retrieved successfully', 200);
     }
 }

@@ -5,7 +5,7 @@ namespace App\Http\Resources\API;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class LessonResource extends JsonResource
+class AnnouncementResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -17,12 +17,7 @@ class LessonResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
-            'description' => $this->description,
             'content' => $this->content,
-            'category' => $this->category->name,
-            'category_id' => $this->category_id,
-            'instructor' => $this->instructor->name,
-            'image' => $this->getFirstMediaUrl('pictures')
         ];
     }
 }
