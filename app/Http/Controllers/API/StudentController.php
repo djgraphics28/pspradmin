@@ -228,4 +228,12 @@ class StudentController extends Controller
             'remarks' => $studentQuiz->remarks, // Return the remarks from the created record
         ], 200);
     }
+
+    //getResults
+    public function getResults(Request $request)
+    {
+        $student = $request->user();
+        $studentQuizzes = StudentQuiz::where('student_id', $student->id)->get();
+        return $this->success($studentQuizzes, 'Results retrieved successfully', 200);
+    }
 }
