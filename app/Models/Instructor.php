@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -25,8 +26,7 @@ class Instructor extends Authenticatable implements HasMedia
         'name',
         'title',
         'position',
-        'email',
-        'password',
+        'user_id',
     ];
 
     /**
@@ -62,5 +62,14 @@ class Instructor extends Authenticatable implements HasMedia
         return $this->hasMany(Lesson::class);
     }
 
-
+    /**
+     * 
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+    
 }

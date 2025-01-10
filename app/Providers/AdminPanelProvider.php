@@ -30,6 +30,48 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        $plugins = [
+            BreezyCore::make()
+                ->myProfile(
+                    shouldRegisterUserMenu: true,
+                    shouldRegisterNavigation: false,
+                    hasAvatars: false
+                )
+                ->enableTwoFactorAuthentication(),
+
+            FilamentJobsMonitorPlugin::make()
+                ->navigationCountBadge()
+                ->navigationGroup('Settings'),
+
+            FilamentPeekPlugin::make()
+                ->disablePluginStyles(),
+
+            FilamentExceptionsPlugin::make(),
+
+            GravatarPlugin::make(),
+        ];
+
+        // Add the CuratorPlugin only for admin users
+        if (auth()->check() && auth()->user()->is_admin) {
+            $plugins[] = CuratorPlugin::make()
+                ->label('Media')
+                ->pluralLabel('Media Library')
+                ->navigationIcon('heroicon-o-photo')
+                ->navigationGroup('Media')
+                ->navigationCountBadge();
+        }
+
+        // Define navigation groups
+        $navigationGroups = [
+            // 'Collections', // Always visible
+            // 'Settings',    // Always visible
+        ];
+
+        // Add navigation groups for admins
+        if (auth()->check() && auth()->user()->is_admin) {
+            $navigationGroups = ['Media', 'Collections', 'Settings'];
+        }
+
         return $panel
             ->default()
             ->id('admin')
@@ -38,41 +80,11 @@ class AdminPanelProvider extends PanelProvider
             ->profile()
             ->spa()
             ->databaseNotifications()
-            ->plugins([
-                BreezyCore::make()
-                    ->myProfile(
-                        shouldRegisterUserMenu: true,
-                        shouldRegisterNavigation: false,
-                        hasAvatars: false
-                    )
-                    ->enableTwoFactorAuthentication(),
-
-                CuratorPlugin::make()
-                    ->label('Media')
-                    ->pluralLabel('Media Library')
-                    ->navigationIcon('heroicon-o-photo')
-                    ->navigationGroup('Media')
-                    ->navigationCountBadge(),
-
-                FilamentJobsMonitorPlugin::make()
-                    ->navigationCountBadge()
-                    ->navigationGroup('Settings'),
-
-                FilamentPeekPlugin::make()
-                    ->disablePluginStyles(),
-
-                FilamentExceptionsPlugin::make(),
-
-                GravatarPlugin::make(),
-            ])
+            ->plugins($plugins) // Dynamically set the plugins
             ->defaultAvatarProvider(GravatarProvider::class)
             ->favicon(asset('/favicon-32x32.png'))
-            ->brandLogo(fn () => view('components.logo'))
-            ->navigationGroups([
-                'Collections',
-                'Media',
-                'Settings',
-            ])
+            ->brandLogo(fn() => view('components.logo'))
+            ->navigationGroups($navigationGroups) // Dynamically set the navigation groups
             ->colors([
                 'primary' => Color::Blue,
             ])

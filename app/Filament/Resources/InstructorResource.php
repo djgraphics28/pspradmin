@@ -7,7 +7,9 @@ use Filament\Tables;
 use Filament\Forms\Form;
 use App\Models\Instructor;
 use Filament\Tables\Table;
+use App\Mail\AccountCreated;
 use Filament\Resources\Resource;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\InstructorResource\Pages;
@@ -20,6 +22,11 @@ class InstructorResource extends Resource
     protected static ?string $model = Instructor::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()->is_admin;
+    }
 
     public static function form(Form $form): Form
     {
@@ -37,15 +44,6 @@ class InstructorResource extends Resource
                 Forms\Components\TextInput::make('position')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
-                Forms\Components\TextInput::make('password')
-                    ->password()
-                    ->required()
-                    ->maxLength(255),
             ]);
     }
 
@@ -61,11 +59,6 @@ class InstructorResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('position')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -80,6 +73,40 @@ class InstructorResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('createAccount')
+                    ->form([
+                        Forms\Components\TextInput::make('email')
+                            ->email()
+                            ->required(),
+                    ])
+                    ->action(function (Instructor $record, array $data) {
+                        $password = strtolower(explode(' ', $record->name)[1]); // Get lowercase of last name
+            
+                        // Create user account
+                        $user = \App\Models\User::create([
+                            'name' => $record->name,
+                            'is_admin' => false,
+                            'email' => $data['email'],
+                            'password' => bcrypt($password)
+                        ]);
+
+                        // Update instructor with user_id
+                        $record->update([
+                            'user_id' => $user->id
+                        ]);
+
+                        // Send verification email with credentials
+                        \Mail::to($data['email'])->send(new AccountCreated($user, $password));
+
+                        // Show notification
+                        Notification::make()
+                            ->success()
+                            ->title('Account created successfully')
+                            ->send();
+                    })
+                    ->icon('heroicon-o-user-plus')
+                    ->label(fn(Instructor $record) => $record->user_id ? 'Reset Account' : 'Create Account')
+                    ->hidden(fn(Instructor $record) => $record->user_id !== null),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

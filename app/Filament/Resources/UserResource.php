@@ -33,6 +33,11 @@ class UserResource extends Resource
      */
     protected static ?int $navigationSort = 1;
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->is_admin;
+    }
+
     /**
      * Get the navigation badge for the resource.
      */
@@ -60,9 +65,9 @@ class UserResource extends Resource
                     ->maxLength(255),
 
                 Forms\Components\TextInput::make('password')
-                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                    ->dehydrated(fn (?string $state): bool => filled($state))
-                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrateStateUsing(fn(string $state): string => Hash::make($state))
+                    ->dehydrated(fn(?string $state): bool => filled($state))
+                    ->required(fn(string $operation): bool => $operation === 'create')
                     ->password()
                     ->confirmed()
                     ->maxLength(255),
@@ -70,7 +75,7 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('password_confirmation')
                     ->label('Confirm password')
                     ->password()
-                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->required(fn(string $operation): bool => $operation === 'create')
                     ->maxLength(255),
             ]);
     }
@@ -91,6 +96,12 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('is_admin')
+                    ->label('Role')
+                    ->formatStateUsing(fn(bool $state): string => $state ? 'Admin' : 'Instructor')
+                    ->badge()
+                    ->color(fn(bool $state): string => $state ? 'warning' : 'success'),
             ])
             ->filters([
                 //
